@@ -65,8 +65,20 @@ query($login: String!) {
   }
 }""", login=USER)["user"]["contributionsCollection"]["contributionCalendar"]
 os.makedirs(os.path.join(ROOT, "assets"), exist_ok=True)
+saved_path = os.path.join(ROOT, "assets", "calendar.json")
+saved = {}
+if os.path.exists(saved_path):
+    with open(saved_path) as f:
+        saved = json.load(f)
+for week in cal["weeks"]:
+    for d in week["contributionDays"]:
+        d["contributionCount"] = max(d["contributionCount"], saved.get(d["date"], 0))
+        saved[d["date"]] = d["contributionCount"]
+with open(saved_path, "w") as f:
+    json.dump(dict(sorted(saved.items())), f, indent=0)
+year_total = sum(d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"])
 with open(os.path.join(ROOT, "assets", "contributions.svg"), "w") as f:
-    f.write(render(cal["weeks"], cal["totalContributions"]))
+    f.write(render(cal["weeks"], year_total))
 
 with open(README) as f:
     previous = {m.group(1): int(m.group(2).replace(",", ""))
