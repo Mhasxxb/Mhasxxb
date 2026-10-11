@@ -53,9 +53,9 @@ testing   : Playwright, Vitest
 haseeb@github:~$ gh stats --all-time
 total contributions .... 377
 commits ................ 352
-pull requests .......... 9
-merged PRs ............. 5 (56%)
-repositories ........... 15
+pull requests .......... 277
+merged PRs ............. 255 (92%)
+repositories ........... 21
 ```
 <!-- stats:end -->
 

@@ -68,7 +68,14 @@ os.makedirs(os.path.join(ROOT, "assets"), exist_ok=True)
 with open(os.path.join(ROOT, "assets", "contributions.svg"), "w") as f:
     f.write(render(cal["weeks"], cal["totalContributions"]))
 
-prs, merged = base["pullRequests"]["totalCount"], base["merged"]["totalCount"]
+with open(README) as f:
+    previous = {m.group(1): int(m.group(2).replace(",", ""))
+                for m in re.finditer(r"^([a-zA-Z ]+?) \.+ ([\d,]+)", f.read(), re.M)}
+contributions = max(contributions, previous.get("total contributions", 0))
+commits = max(commits, previous.get("commits", 0))
+prs = max(base["pullRequests"]["totalCount"], previous.get("pull requests", 0))
+merged = max(base["merged"]["totalCount"], previous.get("merged PRs", 0))
+base["repositories"]["totalCount"] = max(base["repositories"]["totalCount"], previous.get("repositories", 0))
 rate = round(merged / prs * 100) if prs else 0
 rows = [
     ("total contributions", f"{contributions:,}"),
