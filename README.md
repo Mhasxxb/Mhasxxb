@@ -32,7 +32,7 @@ features  : leads, policies, commissions, visual automations,
 testing   : Playwright, Vitest
 ```
 
-<p>&#128279; <a href="https://github.com/unLocked-CRM/clover-agent-pro"><b>unLocked CRM</b></a> <sub>(private repo)</sub></p>
+<p>&#128279; <a href="https://app.unlockedcrm.ai"><b>unLocked CRM</b></a></p>
 
 <p>
   <img src="https://img.shields.io/badge/Ruby-0d1117?style=for-the-badge&logo=ruby&logoColor=CC342D" alt="Ruby" />
