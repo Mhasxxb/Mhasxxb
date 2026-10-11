@@ -4,7 +4,7 @@
 
 ```bash
 haseeb@github:~$ whoami
-Muhammad Haseeb, full-stack developer (Rails + React)
+Muhammad Haseeb, full-stack developer
 
 haseeb@github:~$ cat stack.yml
 backend   : Ruby on Rails (API mode), PostgreSQL, Devise + JWT
