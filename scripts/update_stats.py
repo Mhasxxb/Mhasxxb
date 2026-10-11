@@ -3,12 +3,12 @@ import os
 import re
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 USER = os.environ.get("GH_USER", "Mhasxxb")
 TOKEN = os.environ["GH_TOKEN"]
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from heatmap import render
+from heatmap import heatmap_width, render, render_streak
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 README = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "README.md")
@@ -37,7 +37,15 @@ query($login: String!) {
   }
 }""", login=USER)["user"]
 
-contributions = commits = 0
+os.makedirs(os.path.join(ROOT, "assets"), exist_ok=True)
+saved_path = os.path.join(ROOT, "assets", "calendar.json")
+saved = {}
+if os.path.exists(saved_path):
+    with open(saved_path) as f:
+        saved = json.load(f)
+
+DAYS = "weeks { contributionDays { date contributionCount } }"
+commits = 0
 start_year = int(base["createdAt"][:4])
 now = datetime.now(timezone.utc)
 for year in range(start_year, now.year + 1):
@@ -47,43 +55,41 @@ for year in range(start_year, now.year + 1):
         contributionsCollection(from: $from, to: $to) {
           totalCommitContributions
           restrictedContributionsCount
-          contributionCalendar { totalContributions }
+          contributionCalendar { %s }
         }
       }
-    }""", login=USER, **{"from": f"{year}-01-01T00:00:00Z",
-                         "to": min(now, datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc)).isoformat()})
+    }""" % DAYS, login=USER, **{"from": f"{year}-01-01T00:00:00Z",
+                                "to": min(now, datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc)).isoformat()})
     cc = c["user"]["contributionsCollection"]
-    contributions += cc["contributionCalendar"]["totalContributions"]
     commits += cc["totalCommitContributions"] + cc["restrictedContributionsCount"]
+    for week in cc["contributionCalendar"]["weeks"]:
+        for d in week["contributionDays"]:
+            saved[d["date"]] = max(d["contributionCount"], saved.get(d["date"], 0))
 
 cal = gql("""
 query($login: String!) {
-  user(login: $login) {
-    contributionsCollection {
-      contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } }
-    }
-  }
-}""", login=USER)["user"]["contributionsCollection"]["contributionCalendar"]
-os.makedirs(os.path.join(ROOT, "assets"), exist_ok=True)
-saved_path = os.path.join(ROOT, "assets", "calendar.json")
-saved = {}
-if os.path.exists(saved_path):
-    with open(saved_path) as f:
-        saved = json.load(f)
+  user(login: $login) { contributionsCollection { contributionCalendar { totalContributions %s } } }
+}""" % DAYS, login=USER)["user"]["contributionsCollection"]["contributionCalendar"]
 for week in cal["weeks"]:
     for d in week["contributionDays"]:
-        d["contributionCount"] = max(d["contributionCount"], saved.get(d["date"], 0))
-        saved[d["date"]] = d["contributionCount"]
+        saved[d["date"]] = max(d["contributionCount"], saved.get(d["date"], 0))
+        d["contributionCount"] = saved[d["date"]]
+
 with open(saved_path, "w") as f:
     json.dump(dict(sorted(saved.items())), f, indent=0)
-year_total = sum(d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"])
+
+contributions = sum(saved.values())
+today = date.fromisoformat(max(d["date"] for w in cal["weeks"] for d in w["contributionDays"]))
+year_total = max(cal["totalContributions"], sum(d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]))
+width = heatmap_width(len(cal["weeks"]))
 with open(os.path.join(ROOT, "assets", "contributions.svg"), "w") as f:
     f.write(render(cal["weeks"], year_total))
+with open(os.path.join(ROOT, "assets", "streak.svg"), "w") as f:
+    f.write(render_streak(saved, contributions, date.fromisoformat(base["createdAt"][:10]), today, width))
 
 with open(README) as f:
     previous = {m.group(1): int(m.group(2).replace(",", ""))
                 for m in re.finditer(r"^([a-zA-Z ]+?) \.+ ([\d,]+)", f.read(), re.M)}
-contributions = max(contributions, previous.get("total contributions", 0))
 commits = max(commits, previous.get("commits", 0))
 prs = max(base["pullRequests"]["totalCount"], previous.get("pull requests", 0))
 merged = max(base["merged"]["totalCount"], previous.get("merged PRs", 0))
@@ -97,8 +103,8 @@ rows = [
     ("repositories", f"{base['repositories']['totalCount']:,}"),
 ]
 
-width = max(len(label) for label, _ in rows) + 4
-block = "\n".join(f"{label} {'.' * (width - len(label))} {value}" for label, value in rows)
+pad = max(len(label) for label, _ in rows) + 4
+block = "\n".join(f"{label} {'.' * (pad - len(label))} {value}" for label, value in rows)
 with open(README) as f:
     readme = f.read()
 readme = re.sub(r"(<!-- stats:start -->\n```bash\nhaseeb@github:~\$ gh stats --all-time\n)(?:.*?\n)?(```\n<!-- stats:end -->)",

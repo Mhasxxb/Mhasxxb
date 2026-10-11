@@ -51,8 +51,8 @@ testing   : Playwright, Vitest
 <!-- stats:start -->
 ```bash
 haseeb@github:~$ gh stats --all-time
-total contributions .... 1,191
-commits ................ 1,166
+total contributions .... 1,192
+commits ................ 1,167
 pull requests .......... 277
 merged PRs ............. 255 (92%)
 repositories ........... 21
@@ -64,7 +64,7 @@ haseeb@github:~$ gh streak --user Mhasxxb
 ```
 
 <p>
-  <img width="100%" src="https://streak-stats.demolab.com?user=Mhasxxb&hide_border=true&border_radius=6&background=0d1117&stroke=30363d&ring=39d353&fire=39d353&currStreakNum=39d353&currStreakLabel=39d353&sideNums=e6edf3&sideLabels=8b949e&dates=6e7681&date_format=M%20j%5B%2C%20Y%5D" alt="GitHub streak" />
+  <img width="100%" src="assets/streak.svg" alt="GitHub streak" />
 </p>
 
 ```bash
