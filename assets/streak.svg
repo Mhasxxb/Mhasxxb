@@ -3,7 +3,7 @@
 <rect width="784" height="170" rx="6" fill="#0d1117"/>
 <line x1="261" y1="32" x2="261" y2="138" stroke="#30363d"/>
 <line x1="523" y1="32" x2="523" y2="138" stroke="#30363d"/>
-<text class="num" x="131" y="78">1,193</text>
+<text class="num" x="131" y="78">1,197</text>
 <text class="lbl" x="131" y="108">Total Contributions</text>
 <text class="dt" x="131" y="130">Jan 14, 2025 to Present</text>
 <circle cx="392" cy="70" r="38" fill="none" stroke="#39d353" stroke-width="5"/>
